@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+     <h2 class="mb-4 mb-5 text-center">
+        <i class="bi bi-graph-up"></i>
+        Анализа на трендови
+    </h2>
+
+    <!-- Копчиња за филтрирање по година -->
+    <div class="mb-4 text-center">
+        <div class="btn-group" role="group" aria-label="Filter by year">
+            <a href="?year=all" class="btn btn-outline-primary {% if not selected_year or selected_year == 'all' %}active{% endif %}">Сите</a>
+            {% for year in all_years %}
+                <a href="?year={{ year }}" class="btn btn-outline-primary {% if selected_year == year|stringformat:'i' %}active{% endif %}">
+                    {{ year }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Графикон за трендови -->
+        <div class="col-md-9 text-center">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ title }}</h5>
+                    <canvas id="trendChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Сума по години -->
+        <div class="col-md-3 mb-5">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Договори по година</h5>
+                    <ul class="list-group">
+                        {% for item in contracts_by_year %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ item.year|date:"Y" }}
+                                <span class="badge bg-primary rounded-pill">{{ item.total|floatformat:2 }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Податоци од Django view
+    const labels = {{ labels|safe }};
+    const amounts = {{ amounts|safe }};
+
+    // Графикон за трендови
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Вкупен износ',
+                data: amounts,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

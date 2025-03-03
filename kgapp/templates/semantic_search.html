@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 mb-5 text-center">
+        <i class="bi bi-search"></i>
+        Семантичко пребарување
+    </h2>
+
+    <form method="get" class="mb-4">
+        <input type="text" name="query" class="form-control" placeholder="Внесете прашање..." value="{{ query }}">
+        <button type="submit" class="btn btn-primary mt-3">Пребарај</button>
+    </form>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% elif results %}
+        <h2>Резултати:</h2>
+        <ul class="list-group">
+            {% for result in results %}
+                <li class="list-group-item">
+                    <strong>Институција:</strong> {{ result.institution }} <br>
+                    <strong>Договор:</strong> {{ result.contract }} <br>
+                    <strong>Износ:</strong> {{ result.amount }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">Нема пронајдени резултати.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+
+{#{% extends 'base.html' %}#}
+{#{% block content %}#}
+{#<div class="container mt-5">#}
+{#    <h1 class="mb-4">Семантичко пребарување</h1>#}
+{#    #}
+{#    <form method="get" class="mb-4">#}
+{#        <input type="text" name="query" class="form-control" placeholder="Внесете прашање..." value="{{ query }}">#}
+{#        <button type="submit" class="btn btn-primary mt-3">Пребарај</button>#}
+{#    </form>#}
+{##}
+{#    {% if error %}#}
+{#        <div class="alert alert-danger">{{ error }}</div>#}
+{#    {% elif results %}#}
+{#        <h2>Резултати:</h2>#}
+{#        <ul>#}
+{#            {% for result in results %}#}
+{#                <li>Институција: {{ result.institution }}, Договор: {{ result.contract }}, Износ: {{ result.amount }}</li>#}
+{#            {% endfor %}#}
+{#        </ul>#}
+{#    {% else %}#}
+{#        <p>Нема пронајдени резултати.</p>#}
+{#    {% endif %}#}
+{#</div>#}
+{#{% endblock %}#}

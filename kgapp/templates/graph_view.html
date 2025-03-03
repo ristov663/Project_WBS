@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 mb-5 text-center">
+        <i class="bi bi-diagram-3"></i>
+        Визуелизација на графот на знаење
+    </h2>
+    <div id="cy" style="width: 100%; height: 700px; border: 1px solid #ccc; margin-bottom: 50px;"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.0/cytoscape.min.js"></script>
+<script>
+    // Податоци од Django view
+    const nodes = {{ nodes|safe }};
+    const edges = {{ edges|safe }};
+
+    // Иницијализација на Cytoscape
+    const cy = cytoscape({
+        container: document.getElementById('cy'),
+        elements: {
+            nodes: nodes,
+            edges: edges
+        },
+        style: [
+            {
+                selector: 'node',
+                style: {
+                    'background-color': '#007bff',
+                    'label': 'data(label)',
+                    'color': '#000',
+                    'text-valign': 'center',
+                    'text-halign': 'center',
+                    'font-size': '12px',
+                    'width': '40px',
+                    'height': '40px'
+                }
+            },
+            {
+                selector: 'edge',
+                style: {
+                    'width': 2,
+                    'line-color': '#ccc',
+                    'target-arrow-color': '#ccc',
+                    'target-arrow-shape': 'triangle',
+                    'label': 'data(label)',
+                    'font-size': '10px',
+                    'color': '#555',
+                    'curve-style': 'bezier'
+                }
+            },
+            {
+                selector: ':selected',
+                style: {
+                    'background-color': '#ff5722',
+                    'line-color': '#ff5722',
+                    'target-arrow-color': '#ff5722',
+                    'source-arrow-color': '#ff5722'
+                }
+            }
+        ],
+        layout: {
+            name: 'cose', // Автоматски распоред
+            idealEdgeLength: 100,
+            nodeOverlap: 20,
+            refresh: 20,
+            fit: true,
+            padding: 30,
+            randomize: false,
+            componentSpacing: 100,
+            nodeRepulsion: 400000,
+            edgeElasticity: 100,
+            nestingFactor: 5,
+            gravity: 80,
+            numIter: 1000,
+            initialTemp: 200,
+            coolingFactor: 0.95,
+            minTemp: 1.0
+        }
+    });
+
+    // Додавање на интерактивност
+    cy.on('tap', 'node', function(evt) {
+    const node = evt.target;
+    const connectedEdges = node.connectedEdges();
+    const connectedNodes = connectedEdges.connectedNodes();
+
+    cy.elements().style('display', 'none'); // Скриј ги сите елементи
+    node.style('display', 'element'); // Прикажи го избраниот јазол
+    connectedEdges.style('display', 'element'); // Прикажи ги релациите
+    connectedNodes.style('display', 'element'); // Прикажи ги поврзаните јазли
+});
+
+</script>
+{% endblock %}

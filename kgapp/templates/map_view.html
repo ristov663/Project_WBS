@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-5">
+    <h2 class="mb-4 mb-5 text-center">
+        <i class="bi bi-geo-alt"></i>
+        Географска визуелизација
+    </h2>
+    <div id="map" style="height: 550px; margin-bottom: 50px;"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+<script>
+    const institutions = {{ institutions|safe }};
+    const suppliers = {{ suppliers|safe }};
+
+    const map = L.map('map').setView([41.5981, 21.4254], 8); // Центрирање кон Македонија
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Додавање маркери за институции
+    institutions.forEach(inst => {
+        L.marker([inst.latitude, inst.longitude])
+            .addTo(map)
+            .bindPopup(`<b>${inst.name}</b>`);
+    });
+
+    // Додавање маркери за добавувачи
+    suppliers.forEach(supp => {
+        L.marker([supp.latitude, supp.longitude])
+            .addTo(map)
+            .bindPopup(`<b>${supp.name}</b>`);
+    });
+
+</script>
+{% endblock %}

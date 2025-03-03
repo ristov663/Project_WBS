@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h2 class="mb-4 mb-5 text-center">
+        <i class="bi bi-graph-up-arrow"></i>
+        Анализа на идни трендови во јавните набавки
+    </h2>
+    <div class="row">
+        <div class="col-md-3">
+            <br><br><h5 class="text-center">Предвидени износи по година</h5>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th class="text-center">Година</th>
+                        <th class="text-center">Предвиден износ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for year, amount in data %}
+                        <tr>
+                            <td class="text-center">{{ year }}</td>
+                            <td class="text-center">{{ amount|floatformat:2 }} денари</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-9">
+            <img src="{{ graph_image }}" alt="Trend Analysis" class="img-fluid">
+        </div>
+    </div><br><br>
+</div>
+{% endblock %}

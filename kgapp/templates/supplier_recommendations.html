@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+
+
+   <div class="row">
+       <div style="margin-top: 300px; margin-left: 0px;" class="container col-md-5">
+       <h2 class="mb-4 mb-5 text-left">
+        <i class="bi bi-star"></i>
+        Препораки за добавувачи
+    </h2>
+            <!-- Филтри -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <select name="institution" class="form-select">
+                    <option value="">Сите институции</option>
+                    {% for institution in institutions %}
+                        <option value="{{ institution.id }}">{{ institution.name }}</option>
+                        {{ institution.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Филтрирај</button>
+            </div>
+        </div>
+    </form>
+       </div>
+
+   <div class="card container md-2 col-md-7">
+        <div class="card-body text-center">
+            <h5 class="card-title">Графикон за број на договори</h5>
+            <canvas id="recommendationChart"></canvas>
+        </div>
+    </div>
+   </div>
+
+    <!-- Табела со препораки -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Топ 10 Добавувачи</h5>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Име на добавувач</th>
+                        <th>Број на договори</th>
+                        <th>Вкупен износ (МКД)</th>
+                        <th>Тежина</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for recommendation in recommendations %}
+                        <tr>
+                            <td>{{ recommendation.name }}</td>
+                            <td>{{ recommendation.contract_count }}</td>
+                            <td>{{ recommendation.total_amount|floatformat:2 }}</td>
+                            <td>{{ recommendation.weight|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">Нема податоци за препораки.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Податоци за графиконот
+    const recommendationData = {{ recommendations|safe }};
+    const ctx = document.getElementById('recommendationChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: recommendationData.map(r => r.name),
+            datasets: [{
+                label: 'Број на договори',
+                data: recommendationData.map(r => r.contract_count),
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false // Исклучување на легендата
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    ticks: {
+                        display: false // Скривање на текстот на x-оската
+                    },
+                    grid: {
+                        display: false // Ако сакаш да го скриеш и растерот на x-оската
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

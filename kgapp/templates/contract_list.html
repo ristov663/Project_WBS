@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h1 class="mb-4 mb-5 text-center">
+        <i class="bi bi-briefcase"></i>
+        Јавни набавки
+    </h1>
+
+
+    <!-- Копчиња за филтрирање по година -->
+    <div class="mb-4 d-flex justify-content-center">
+        <div class="btn-group" role="group" aria-label="Filter by year">
+            <a href="?" class="btn btn-outline-primary {% if not selected_year %}active{% endif %}">Сите</a>
+            {% for year in all_years %}
+                <a href="?year={{ year|date:'Y' }}" class="btn btn-outline-primary {% if selected_year == year|date:'Y' %}active{% endif %}">
+                    {{ year|date:"Y" }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row align-items-end mb-4">
+    <!-- Поле за пребарување -->
+        <div class="col-md-8">
+            <form method="get">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Пребарувај по институција или добавувач" value="{{ search_query }}">
+                    <button type="submit" class="btn btn-primary">Пребарувај</button>
+                </div>
+                <input type="hidden" name="year" value="{{ selected_year }}">
+                <input type="hidden" name="start_date" value="{{ start_date }}">
+                <input type="hidden" name="end_date" value="{{ end_date }}">
+                <input type="hidden" name="min_amount" value="{{ min_amount }}">
+                <input type="hidden" name="max_amount" value="{{ max_amount }}">
+                <input type="hidden" name="sort" value="{{ sort }}">
+            </form>
+        </div>
+
+        <!-- Dropdown за сортирање -->
+        <div class="col-md-4">
+            <form method="get">
+                <input type="hidden" name="year" value="{{ selected_year }}">
+                <input type="hidden" name="start_date" value="{{ start_date }}">
+                <input type="hidden" name="end_date" value="{{ end_date }}">
+                <input type="hidden" name="min_amount" value="{{ min_amount }}">
+                <input type="hidden" name="max_amount" value="{{ max_amount }}">
+                <input type="hidden" name="search" value="{{ search_query }}">
+
+                <select name="sort" class="form-select" onchange="this.form.submit()">
+                    <option value="-amount" {% if sort == '-amount' %}selected{% endif %}>Цена (опаѓачки)</option>
+                    <option value="amount" {% if sort == 'amount' %}selected{% endif %}>Цена (растечки)</option>
+                    <option value="-institution" {% if sort == '-institution' %}selected{% endif %}>Име (опаѓачки)</option>
+                    <option value="institution" {% if sort == 'institution' %}selected{% endif %}>Име (растечки)</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Форма за филтрирање -->
+    <form method="get" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <input type="date" name="start_date" class="form-control" placeholder="Почетен датум" value="{{ start_date }}">
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="end_date" class="form-control" placeholder="Краен датум" value="{{ end_date }}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="min_amount" class="form-control" placeholder="Мин. износ" value="{{ min_amount }}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="max_amount" class="form-control" placeholder="Макс. износ" value="{{ max_amount }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Филтрирај</button>
+            </div>
+        </div>
+        <input type="hidden" name="year" value="{{ selected_year }}">
+        <input type="hidden" name="sort" value="{{ sort }}">
+    </form>
+    <br><br>
+
+
+    <!-- Листа на договори -->
+    <div class="row"><br>
+        <div class="col-md-8">
+            <div class="list-group mb-4">
+                {% for contract in page_obj %}
+                    <div class="list-group-item">
+                        <div class="container text-center">
+                            <h5 class="mb-1">
+                                <a href="{% url 'institution_detail' contract.institution.id %}">{{ contract.institution.name }}</a>
+                            </h5>
+                            <br>
+                        </div>
+                        <br>
+                        <h6 class="mb-1">
+                            Фирма: <a href="{% url 'supplier_detail' contract.supplier.id %}">{{ contract.supplier.name }}</a>
+                        </h6>
+                        <h6 class="mb-1">Износ: {{ contract.amount }} ден.</h6>
+                        <h6>Датум: {{ contract.date }}</h6>
+                        <p>Опис: {{ contract.description }} </p>
+                    </div>
+                {% empty %}
+                    <p>Нема пронајдени договори.</p>
+                {% endfor %}
+            </div>
+
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if min_amount %}&min_amount={{ min_amount }}{% endif %}{% if max_amount %}&max_amount={{ max_amount }}{% endif %}&sort={{ sort }}&search={{ search_query }}">Претходна</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if min_amount %}&min_amount={{ min_amount }}{% endif %}{% if max_amount %}&max_amount={{ max_amount }}{% endif %}&sort={{ sort }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if min_amount %}&min_amount={{ min_amount }}{% endif %}{% if max_amount %}&max_amount={{ max_amount }}{% endif %}&sort={{ sort }}&search={{ search_query }}">Следна</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+
+        <!-- Сума по години -->
+        <div class="col-md-4"><br>
+            <h3 class="mb-3 text-center">Договори по година</h3>
+            <ul class="list-group">
+                {% for item in contracts_by_year %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ item.year|date:"Y" }}
+                        <span class="badge bg-primary rounded-pill">{{ item.total|floatformat:2 }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

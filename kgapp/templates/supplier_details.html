@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">{{ supplier.name }}</h1>
+    <h2 class="mb-3">Договори</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Опис</th>
+                    <th>Датум</th>
+                    <th>Износ</th>
+                    <th>Институција</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for contract in contracts %}
+                <tr>
+                    <td>{{ contract.description }}</td>
+                    <td>{{ contract.date }}</td>
+                    <td>{{ contract.amount }}</td>
+                    <td>{{ contract.institution.name }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">Нема договори за овој добавувач.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+<div class="d-flex justify-content-center">
+        <a href="{% url 'supplier_list' %}" class="btn btn-primary mt-6 mb-2 mx-2">Назад кон листата на добавувачи</a>
+        <a href="{% url 'contract_list' %}" class="btn btn-primary mt-6 mb-2 mx-2">Назад кон листата на јавни набавки</a>
+    </div>
+<div class="mb-5"></div>
+</div>
+{% endblock %}

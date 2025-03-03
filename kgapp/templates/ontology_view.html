@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 mb-5 text-center">
+        <i class="bi bi-diagram-2"></i>
+        Онтологија за Јавни набавки
+    </h2>
+
+    <!-- Класи -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Класи</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-group">
+                {% for cls in classes %}
+                    <li class="list-group-item">{{ cls }}</li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Нема пронајдени класи.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Објектни својства -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Објектни својства</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-group">
+                {% for prop in object_properties %}
+                    <li class="list-group-item">{{ prop }}</li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Нема пронајдени објектни својства.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Податочни својства -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Податочни својства</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-group">
+                {% for prop in data_properties %}
+                    <li class="list-group-item">{{ prop }}</li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Нема пронајдени податочни својства.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

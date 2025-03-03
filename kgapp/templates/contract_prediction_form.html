@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h3 class="text-center mb-0">Предвидување на износ на договор за јавна набавка</h3>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="institution" class="form-label fw-bold">Институција:</label>
+                    <select class="form-select" id="institution" name="institution" required>
+                        {% for institution in institutions %}
+                            <option value="{{ institution }}">{{ institution }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="contract_description" class="form-label fw-bold">Опис на договорот:</label>
+                    <textarea class="form-control" id="contract_description" name="contract_description" rows="3" required></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="supplier" class="form-label fw-bold">Добавувач:</label>
+                    <select class="form-select" id="supplier" name="supplier" required>
+                        {% for supplier in suppliers %}
+                            <option value="{{ supplier }}">{{ supplier }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="d-flex justify-content-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-calculator"></i> Предвиди износ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div><br><br>
+</div>
+{% endblock %}

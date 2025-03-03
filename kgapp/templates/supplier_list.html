@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 mb-5 text-center">
+        <i class="bi bi-truck"></i>
+        Добавувачи
+    </h1>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="get" class="mb-0">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Пребарувај добавувачи" value="{{ search_query }}">
+                    <button type="submit" class="btn btn-primary">Пребарувај</button>
+                </div>
+                <input type="hidden" name="sort" value="{{ sort_order }}">
+            </form>
+        </div>
+        <div class="col-md-4">
+            <form method="get" class="mb-0">
+                <select name="sort" class="form-select" onchange="this.form.submit()">
+                    <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Име (растечки)</option>
+                    <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Име (опаѓачки)</option>
+                </select>
+                <input type="hidden" name="search" value="{{ search_query }}">
+            </form>
+        </div>
+    </div>
+
+    <ul class="list-group">
+    {% for supplier in page_obj %}
+        <li class="list-group-item">
+            <a href="{% url 'supplier_detail' supplier.id %}">{{ supplier.name }}</a>
+        </li>
+    {% empty %}
+        <li class="list-group-item">Нема пронајдени добавувачи.</li>
+    {% endfor %}
+    </ul>
+
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&sort={{ sort_order }}">Претходна</a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&search={{ search_query }}&sort={{ sort_order }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&sort={{ sort_order }}">Следна</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h2 class="text-center mb-0">Резултати од предвидувањето</h2>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-success" role="alert">
+                <h4 class="text-center fw-bold">
+                    Предвиден износ на договорот:
+                    <span class="badge bg-success">{{ predicted_amount|floatformat:2 }} денари</span>
+                </h4>
+            </div>
+
+            <h3 class="mt-4 mb-3">Внесени податоци:</h3>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th scope="row">Институција:</th>
+                            <td>{{ institution }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Опис на договорот:</th>
+                            <td>{{ contract_description }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Добавувач:</th>
+                            <td>{{ supplier }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="mt-4 mb-3">Историски тренд:</h3>
+            <div class="text-center">
+                <img src="{{ historical_trend_image }}" alt="Историски тренд" class="img-fluid rounded shadow">
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'contract_prediction_view' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-arrow-repeat"></i> Ново предвидување
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
