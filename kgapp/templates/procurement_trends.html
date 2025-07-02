@@ -35,7 +35,7 @@
         <div class="col-md-3 mb-5">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title text-center">Договори по година</h5>
+                    <h5 class="card-title text-center">Contracts by Year</h5>
                     <ul class="list-group">
                         {% for item in contracts_by_year %}
                             <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -63,7 +63,7 @@
         data: {
             labels: labels,
             datasets: [{
-                label: 'Вкупен износ',
+                label: 'Total amount',
                 data: amounts,
                 borderColor: 'rgb(75, 192, 192)',
                 tension: 0.1

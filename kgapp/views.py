@@ -75,7 +75,7 @@ def procurement_trends(request):
 
         labels = [data['month'].strftime('%B') for data in monthly_data]
         amounts = [float(data['total_amount']) for data in monthly_data]
-        title = f"Тренд на набавки за {selected_year} година"
+        title = f"Procurement trend for {selected_year} year"
     else:
         # Aggregate data by year
         yearly_data = Contract.objects.annotate(year=TruncYear('date')).values('year').annotate(
@@ -83,7 +83,7 @@ def procurement_trends(request):
 
         labels = [data['year'].strftime('%Y') for data in yearly_data]
         amounts = [float(data['total_amount']) for data in yearly_data]
-        title = "Тренд на набавки по години"
+        title = "Procurement trend by year"
 
     # Data for the sum by year (for the sidebar list)
     contracts_by_year = Contract.objects.annotate(year=TruncYear('date')).values('year').annotate(
@@ -608,7 +608,7 @@ def trend_analysis_view(request):
     plt.xlabel('Year')
     plt.ylabel('Predicted Total Amount')
     plt.tight_layout()
-    plt.savefig('../data/trend_analysis.png')
+    plt.savefig("data/trend_analysis.png")
     plt.close()
 
     # Combine years and amounts for easy iteration in template
@@ -619,10 +619,9 @@ def trend_analysis_view(request):
         'years': years,
         'amounts': amounts,
         'data': data,
-        'graph_image': '../../data/trend_analysis.png',
+        'graph_image': '/data/trend_analysis.png',
     }
     return render(request, 'trend_analysis.html', context)
-
 
 # def generate_sparql_from_natural_language(query):
 #     # Using ChatGPT (gpt-3.5-turbo or gpt-4)

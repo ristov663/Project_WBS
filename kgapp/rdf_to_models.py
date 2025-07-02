@@ -71,3 +71,11 @@ print("Conversion completed.")
 print(f"Number of contracts: {Contract.objects.count()}")
 print(f"Number of institutions: {Institution.objects.count()}")
 print(f"Number of suppliers: {Supplier.objects.count()}")
+
+# New: Calculate and print relationships
+total_links = Contract.objects.count()
+unique_institution_supplier_pairs = Contract.objects.values('institution', 'supplier').distinct().count()
+
+print(f"\nRelationship statistics:")
+print(f"Total contractual links: {total_links}")
+print(f"Unique institution-supplier pairs: {unique_institution_supplier_pairs}")
