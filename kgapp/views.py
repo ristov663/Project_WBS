@@ -1,6 +1,4 @@
 import rdflib
-# import openai
-# from openai import OpenAI
 import cohere
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
@@ -11,7 +9,6 @@ from urllib.parse import unquote
 from django.db.models import Count, Sum, F, FloatField, Q
 from django.db.models.functions import TruncYear, TruncMonth
 from django.db.models.functions import Cast
-import google.generativeai as genai
 import networkx as nx
 import matplotlib.pyplot as plt
 from django.views.generic import TemplateView
@@ -20,6 +17,8 @@ from .contract_amount_prediction import predict_contract_amount, get_unique_valu
 import pandas as pd
 import seaborn as sns
 import logging
+import google.generativeai as genai
+import os
 
 
 class KnowledgeGraphView(TemplateView):
@@ -623,51 +622,148 @@ def trend_analysis_view(request):
     }
     return render(request, 'trend_analysis.html', context)
 
-# def generate_sparql_from_natural_language(query):
-#     # Using ChatGPT (gpt-3.5-turbo or gpt-4)
-#     client = OpenAI(api_key="API_KEY")
-#
-#     # Send a request to the OpenAI API
-#     response = client.chat.completions.create(
-#         model="gpt-3.5-turbo",
-#         messages=[
-#             {"role": "system", "content": "You are a SPARQL query generator for a public procurement ontology."},
-#             {"role": "user",
-#              "content": f"Convert the following natural language question into a SPARQL query:\n\n{query}"}
-#         ],
-#         max_tokens=150,
-#         temperature=0
-#     )
-#     return response.choices[0].message.content.strip()
-#
-#
-# def semantic_search(request):
-#     query = request.GET.get('query', '')
-#
-#     if not query:
-#         return render(request, 'semantic_search.html', {"results": []})
-#
-#     try:
-#         # Convert natural language to SPARQL
-#         sparql_query = generate_sparql_from_natural_language(query)
-#
-#         # Load the RDF graph
-#         g = Graph()
-#         g.parse("kgapp/ontology/output.ttl", format="turtle")
-#
-#         # Execute the SPARQL query
-#         results = g.query(sparql_query)
-#
-#         # Process the results
-#         response = []
-#         for row in results:
-#             response.append({
-#                 "institution": row.institution,
-#                 "contract": row.contract,
-#                 "amount": row.amount,
-#             })
-#
-#         return render(request, 'semantic_search.html', {"results": response, "query": query})
-#
-#     except Exception as e:
-#         return render(request, 'semantic_search.html', {"error": str(e), "query": query})
+
+import os
+from dotenv import load_dotenv
+import re
+import google.generativeai as genai
+
+# Load environment variables
+load_dotenv()
+api_key = os.environ.get("GOOGLE_API_KEY")
+if not api_key:
+    raise RuntimeError("GOOGLE_API_KEY is not set")
+genai.configure(api_key=api_key)
+
+
+def extract_sparql_from_code_block(text: str) -> str:
+    """
+    If Gemini wraps the SPARQL query in ```code blocks```, strip them.
+    """
+    match = re.search(r"```(?:sparql)?(.*?)```", text, re.DOTALL | re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    return text.strip()
+
+
+def generate_sparql_from_natural_language(user_question: str) -> str:
+    """
+    Calls Gemini to generate a SPARQL query based on your ontology and a natural language question.
+    Uses the correct pattern: contracts are identified by their properties, not by rdf:type.
+    """
+    model = genai.GenerativeModel("gemini-2.5-flash")
+
+    prompt = f"""
+You are an expert SPARQL query generator for a public procurement RDF ontology.
+
+Always use this prefix:
+PREFIX : <http://www.semanticweb.org/pc/ontologies/2025/1/untitled-ontology-19/>
+
+Classes:
+- :Contract (but NOT declared with rdf:type)
+- :Institution
+- :Supplier
+
+Properties:
+- :hasAmount (float)
+- :hasDate (date)
+- :hasInstitution (Institution)
+- :hasSupplier (Supplier)
+- :hasDescription (string)
+
+✅ IMPORTANT: Contracts do NOT have an explicit rdf:type. Never use ?contract a :Contract .
+✅ Always identify ?contract by matching on its properties (e.g., ?contract :hasAmount ?amount).
+✅ For dates, always extract years using: BIND(YEAR(?date) AS ?year)
+✅ Use GROUP BY, ORDER BY and LIMIT when needed.
+✅ Use clear variable names.
+✅ Return ONLY valid SPARQL — no markdown or code fences.
+
+Examples of GOOD patterns:
+
+-- Top 5 contracts by amount:
+PREFIX : <http://www.semanticweb.org/pc/ontologies/2025/1/untitled-ontology-19/>
+SELECT ?contract ?amount
+WHERE {{
+  ?contract :hasAmount ?amount .
+}}
+ORDER BY DESC(?amount)
+LIMIT 5
+
+-- Number of contracts per year:
+PREFIX : <http://www.semanticweb.org/pc/ontologies/2025/1/untitled-ontology-19/>
+SELECT ?year (COUNT(?contract) AS ?contractCount)
+WHERE {{
+  ?contract :hasDate ?date .
+  BIND(YEAR(?date) AS ?year)
+}}
+GROUP BY ?year
+ORDER BY ?year
+
+-- Top 5 institutions by total contract amount:
+PREFIX : <http://www.semanticweb.org/pc/ontologies/2025/1/untitled-ontology-19/>
+SELECT ?institution (SUM(?amount) AS ?totalAmount)
+WHERE {{
+  ?contract :hasInstitution ?institution ;
+            :hasAmount ?amount .
+}}
+GROUP BY ?institution
+ORDER BY DESC(?totalAmount)
+LIMIT 5
+
+---
+Now convert this question to SPARQL:
+{user_question}
+    """.strip()
+
+    # Call Gemini
+    response = model.generate_content([{"role": "user", "parts": [prompt]}])
+
+    # Extract and clean the query
+    raw_sparql = response.text.strip()
+    sparql_query = extract_sparql_from_code_block(raw_sparql)
+
+    print("\n[Gemini] Generated SPARQL:\n", sparql_query)
+
+    return sparql_query
+
+
+from urllib.parse import unquote
+from rdflib.term import URIRef, Literal
+
+
+def semantic_search(request):
+    query = request.GET.get('query', '')
+
+    if not query:
+        return render(request, 'semantic_search.html', {"results": []})
+
+    try:
+        sparql_query = generate_sparql_from_natural_language(query)
+
+        g = Graph()
+        g.parse("kgapp/ontology/output.ttl", format="turtle")
+
+        results = g.query(sparql_query)
+
+        response = []
+        for row in results:
+            item = {}
+            for k in row.labels:
+                val = row[k]
+                if isinstance(val, URIRef):
+                    val_str = str(val)
+                    if "%" in val_str:
+                        val_str = unquote(val_str.split("/")[-1])
+                    else:
+                        val_str = val_str
+                    item[k] = val_str
+                elif isinstance(val, Literal):
+                    item[k] = val.value  # will be int for year/count!
+                else:
+                    item[k] = str(val)
+            response.append(item)
+
+        return render(request, 'semantic_search.html', {"results": response, "query": query})
+
+    except Exception as e:
+        return render(request, 'semantic_search.html', {"error": str(e), "query": query})
