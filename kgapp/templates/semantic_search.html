@@ -1,48 +1,213 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+{% load dict_extras %}
+
+{% block title %}Семантичко Пребарување - Јавни Набавки{% endblock %}
+
+{% block extra_css %}
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .semantic-search-inner {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .search-form input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .search-form button {
+            padding: 15px 30px;
+            background: #1e3c72;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .conversational-response {
+            background: #f8f9fa;
+            border-left: 4px solid #1e3c72;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .sparql-query {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .results-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 20px;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 5px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4 text-center">
-        <i class="bi bi-search"></i>
-        Семантичко пребарување
-    </h2>
+    <div class="semantic-search-inner mb-5">
+        <h1>🔍 Семантичко Пребарување - Јавни Набавки</h1>
+        <form class="search-form" method="GET">
+            <input type="text" name="query" value="{{ query|default:'' }}"
+                   placeholder="Внесете го вашето прашање (пр. Кои се најскапите договори?)"/>
+            <input type="hidden" name="mode" value="{{ mode|default:'search' }}"/>
+            <button type="submit">🔍 Пребарај</button>
+        </form>
+        {% if error %}
+            <div class="error">
+                <strong>Грешка:</strong> {{ error }}
+            </div>
+        {% endif %}
 
-    <form method="get" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="query" class="form-control" placeholder="Внесете прашање..." value="{{ query|default_if_none:'' }}">
-            <button type="submit" class="btn btn-primary">Пребарај</button>
-        </div>
-    </form>
+        {% if conversational_response %}
+            <div class="conversational-response">
+                <h3>💬 Одговор:</h3>
+                <p>{{ conversational_response|linebreaks }}</p>
+            </div>
+        {% endif %}
 
-    {% if error %}
-        <div class="alert alert-danger mt-3">{{ error }}</div>
-    {% elif results %}
-        <h3 class="mt-4 mb-3">Резултати:</h3>
-        <ul class="list-group">
-            {% for result in results %}
-                <li class="list-group-item">
-                    {% if result.institution %}
-                        <strong>Институција:</strong> {{ result.institution }}<br>
-                    {% endif %}
-                    {% if result.contract %}
-                        <strong>Договор:</strong> {{ result.contract }}<br>
-                    {% endif %}
-                    {% if result.amount %}
-                        <strong>Износ:</strong> {{ result.amount }}<br>
-                    {% endif %}
-                    {% if result.year %}
-                        <strong>Година:</strong> {{ result.year }}<br>
-                    {% endif %}
-                    {% if result.contractCount %}
-                        <strong>Број на договори:</strong> {{ result.contractCount }}
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    {% elif query %}
-        <p class="text-muted mt-4">Нема пронајдени резултати за вашето прашање.</p>
-    {% else %}
-        <p class="text-muted mt-4">Внесете прашање за да започнете пребарување.</p>
-    {% endif %}
-</div>
+        {% if sparql_query %}
+            <div class="sparql-query">
+                <strong>SPARQL Query:</strong><br>
+                {{ sparql_query }}
+            </div>
+        {% endif %}
+
+        {% if results_count %}
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ results_count }}</div>
+                    <div class="stat-label">Резултати</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ query|length }}</div>
+                    <div class="stat-label">Карактери во прашањето</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ sparql_query|length }}</div>
+                    <div class="stat-label">SPARQL карактери</div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if results %}
+            <table class="results-table">
+                <thead>
+                <tr>
+                    {% for key in results.0.keys %}
+                        <th>{{ column_names|get_item:key|default:key }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for result in results %}
+                    <tr>
+                        {% for value in result.values %}
+                            <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% elif query and not error %}
+            <div class="no-results">
+                <p>📭 Нема резултати за вашето прашање.</p>
+                <p>Обидете се со поинакво прашање или проверете ја синтаксата.</p>
+            </div>
+        {% endif %}
+    </div>
+    <script>
+        function setMode(mode) {
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('mode', mode);
+            window.location.href = currentUrl.toString();
+        }
+    </script>
 {% endblock %}

@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% load static %}
+{% load dict_extras %}
+
+{% block title %}Јавни Набавки - Асистент{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .chat-wrapper {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px 0;
+        }
+
+        .chat-wrapper .container-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+            0 10px 20px rgba(0, 0, 0, 0.1),
+            0 20px 40px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .chat-wrapper .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .chat-wrapper .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .chat-wrapper .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .chat-wrapper .chat-modes {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .chat-wrapper .mode-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            border: none;
+            font-size: 1em;
+        }
+
+        .chat-wrapper .mode-tab.active {
+            background: white;
+            color: #1e3c72;
+            border-bottom: 3px solid #1e3c72;
+        }
+
+        .chat-wrapper .mode-tab:hover {
+            background: #e9ecef;
+        }
+
+        .chat-wrapper .chat-container {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .chat-wrapper .message {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .chat-wrapper .message.user {
+            background: linear-gradient(135deg, #3d76c1 0%, #5c94d6 100%);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .chat-wrapper .message.assistant {
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+            margin-right: auto;
+        }
+
+        .chat-wrapper .message.loading {
+            background: #e9ecef;
+            color: #666;
+            margin-right: auto;
+            font-style: italic;
+        }
+
+        .chat-wrapper .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+
+        .chat-wrapper .input-container {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .chat-wrapper #questionInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-wrapper #questionInput:focus {
+            border-color: #1e3c72;
+        }
+
+        .chat-wrapper .send-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #3d76c1 0%, #5c94d6 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .chat-wrapper .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-wrapper .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .chat-wrapper .sparql-query {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        .chat-wrapper .results-count {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .chat-wrapper .examples {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .chat-wrapper .example-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .chat-wrapper .example-btn {
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .chat-wrapper .example-btn:hover {
+            background: #1e3c72;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chat-wrapper .message {
+                max-width: 95%;
+            }
+
+            .chat-wrapper .input-container {
+                flex-direction: column;
+            }
+
+            .chat-wrapper .example-questions {
+                flex-direction: column;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="chat-wrapper mb-5">
+        <div class="container-inner">
+            <div class="header">
+                <h1>🤖 Асистент за Јавни Набавки</h1>
+                <p>Прашајте ме било што за договори, институции и набавки во Македонија</p>
+            </div>
+
+            <div class="chat-modes">
+                <button class="mode-tab active" onclick="switchMode('chat')">💬 Разговор</button>
+                <button class="mode-tab" onclick="switchMode('search')">🔍 Пребарување</button>
+            </div>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="message assistant">
+                    <div class="message-header">Асистент</div>
+                    <div>Здраво! Јас сум вашиот асистент за јавни набавки во Македонија. Можете да ми поставувате
+                        прашања како:
+                        <ul style="margin-top: 10px;">
+                            <li>Кои се најскапите договори?</li>
+                            <li>Колку договори има по година?</li>
+                            <li>Кои институции трошат најмногу?</li>
+                            <li>Покажи ми статистики за 2023</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <input type="text" id="questionInput" placeholder="Внесете го вашето прашање овде..."/>
+                <button class="send-btn" onclick="sendQuestion()">Прати</button>
+            </div>
+
+            <div class="examples">
+                <strong>Примери на прашања:</strong>
+                <div class="example-questions">
+                    <button class="example-btn" onclick="useExample('Кои се најскапите договори?')">Најскапи договори
+                    </button>
+                    <button class="example-btn" onclick="useExample('Колку договори има по година?')">Договори по година
+                    </button>
+                    <button class="example-btn" onclick="useExample('Кои институции трошат најмногу?')">Топ институции
+                    </button>
+                    <button class="example-btn" onclick="useExample('Покажи ми добавувачи')">Добавувачи</button>
+                    <button class="example-btn" onclick="useExample('Статистики за 2023')">Статистики 2023</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'chat';
+        let isLoading = false;
+
+        function switchMode(mode) {
+            currentMode = mode;
+
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (mode === 'search') {
+                document.getElementById('chatContainer').innerHTML = `
+            <div class="message assistant">
+                <div class="message-header">Пребарување</div>
+                <div>Сега сум во режим на пребарување. Ќе ви покажам сурови резултати од SPARQL барањата.</div>
+            </div>`;
+            } else {
+                document.getElementById('chatContainer').innerHTML = `
+            <div class="message assistant">
+                <div class="message-header">Асистент</div>
+                <div>Се вратив во конверзациски режим. Ќе ви давам детални објаснувања на резултатите.</div>
+            </div>`;
+            }
+        }
+
+        function sendQuestion() {
+            const input = document.getElementById('questionInput');
+            const question = input.value.trim();
+            if (!question || isLoading) return;
+
+            addMessage('user', question);
+            input.value = '';
+
+            addMessage('loading', 'Размислувам...');
+            isLoading = true;
+            document.querySelector('.send-btn').disabled = true;
+
+            const payload = {question: question, mode: currentMode};
+            fetch('/conversational-chat/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const messages = document.querySelectorAll('.message');
+                    messages[messages.length - 1].remove();
+
+                    let responseHtml = data.response;
+                    if (currentMode === 'chat' && data.sparql_query) {
+                        responseHtml += `<div class="results-count">📊 ${data.results_count} резултати</div>
+                             <div class="sparql-query"><strong>SPARQL Query:</strong><br>${data.sparql_query}</div>`;
+                    }
+                    addMessage('assistant', responseHtml);
+                })
+                .catch(() => {
+                    const messages = document.querySelectorAll('.message');
+                    messages[messages.length - 1].remove();
+                    addMessage('assistant', 'Извинувајте, настана грешка. Обидете се повторно.');
+                })
+                .finally(() => {
+                    isLoading = false;
+                    document.querySelector('.send-btn').disabled = false;
+                });
+        }
+
+        function addMessage(sender, text) {
+            const container = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            const headerText = {'user': 'Вие', 'assistant': 'Асистент', 'loading': 'Асистент'}[sender];
+            messageDiv.innerHTML = `<div class="message-header">${headerText}</div><div>${text}</div>`;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function useExample(question) {
+            document.getElementById('questionInput').value = question;
+            sendQuestion();
+        }
+
+        document.getElementById('questionInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && !isLoading) sendQuestion();
+        });
+    </script>
+{% endblock %}
